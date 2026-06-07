@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <meta name="theme-color" content="#87CEEB">
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h2><i class="fas fa-clock"></i> Our Journey</h2>
+        </div>
+        
+        <div class="countdown-container">
+            <div class="countdown-title">
+                <i class="fas fa-heart"></i>
+                <h3>Together Since</h3>
+                <p>January 23, 2024</p>
+            </div>
+            
+            <div class="countdown-grid">
+                <div class="time-box">
+                    <span id="days">0</span>
+                    <label>Days</label>
+                </div>
+                <div class="time-box">
+                    <span id="hours">0</span>
+                    <label>Hours</label>
+                </div>
+                <div class="time-box">
+                    <span id="minutes">0</span>
+                    <label>Minutes</label>
+                </div>
+                <div class="time-box">
+                    <span id="seconds">0</span>
+                    <label>Seconds</label>
+                </div>
+            </div>
+            
+            <div class="milestones">
+                <h4><i class="fas fa-trophy"></i> Milestones</h4>
+                <div class="milestone">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>100 Days: <strong id="milestone100"></strong></span>
+                </div>
+                <div class="milestone">                    <i class="fas fa-calendar-check"></i>
+                    <span>1 Year: <strong id="milestone365"></strong></span>
+                </div>
+                <div class="milestone">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>1000 Days: <strong id="milestone1000"></strong></span>
+                </div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <i class="fas fa-heart"></i>
+                    <span id="totalHours">0</span>
+                    <label>Hours Together</label>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-smile"></i>
+                    <span id="totalMinutes">0</span>
+                    <label>Minutes Together</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <nav class="bottom-nav">
+        <a href="chat.html" class="nav-item"><i class="fas fa-comments"></i><span>Chat</span></a>
+        <a href="music.html" class="nav-item"><i class="fas fa-music"></i><span>Music</span></a>
+        <a href="memories.html" class="nav-item"><i class="fas fa-images"></i><span>Memories</span></a>
+        <a href="othersites.html" class="nav-item"><i class="fas fa-globe"></i><span>Sites</span></a>
+        <a href="countdown.html" class="nav-item active"><i class="fas fa-clock"></i><span>Countdown</span></a>
+    </nav>
+    
+    <script src="app.js"></script>
+    <script>
+        const startDate = new Date('2024-01-23T00:00:00');
+        
+        function updateCountdown() {
+            const now = new Date();
+            const diff = now - startDate;
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            document.getElementById('days').textContent = days;
+            document.getElementById('hours').textContent = hours;
+            document.getElementById('minutes').textContent = minutes;
+            document.getElementById('seconds').textContent = seconds;
+                        const totalHours = Math.floor(diff / (1000 * 60 * 60));
+            const totalMinutes = Math.floor(diff / (1000 * 60));
+            document.getElementById('totalHours').textContent = totalHours.toLocaleString();
+            document.getElementById('totalMinutes').textContent = totalMinutes.toLocaleString();
+            
+            const milestone100 = new Date(startDate);
+            milestone100.setDate(milestone100.getDate() + 100);
+            document.getElementById('milestone100').textContent = milestone100.toLocaleDateString();
+            
+            const milestone365 = new Date(startDate);
+            milestone365.setFullYear(milestone365.getFullYear() + 1);
+            document.getElementById('milestone365').textContent = milestone365.toLocaleDateString();
+            
+            const milestone1000 = new Date(startDate);
+            milestone1000.setDate(milestone1000.getDate() + 1000);
+            document.getElementById('milestone1000').textContent = milestone1000.toLocaleDateString();
+        }
+        
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+    </script>
+</body>
+</html>
