@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Love App</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <meta name="theme-color" content="#87CEEB">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <i class="fas fa-heart login-icon"></i>
+            <h1>Welcome to Our App</h1>
+            <p>Enter your name to continue</p>
+            <input type="text" id="userName" placeholder="Your Name" maxlength="20">
+            <button id="enterBtn"><i class="fas fa-sign-in-alt"></i> Enter</button>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+        
+        const enterBtn = document.getElementById('enterBtn');
+        const userNameInput = document.getElementById('userName');
+        
+        if (localStorage.getItem('userName')) {
+            window.location.href = 'chat.html';
+        }
+        
+        enterBtn.addEventListener('click', () => {
+            const name = userNameInput.value.trim();
+            if (name) {
+                localStorage.setItem('userName', name);
+                window.location.href = 'chat.html';
+            } else {
+                alert('Please enter your name');
+            }
+        });
+        
+        userNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') enterBtn.click();
+        });
+    </script>
+</body>
+</html>
