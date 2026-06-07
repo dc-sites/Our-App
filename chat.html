@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <meta name="theme-color" content="#87CEEB">
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h2><i class="fas fa-comments"></i> Chat</h2>
+            <div class="header-actions">
+                <button id="themeBtn" title="Change Theme"><i class="fas fa-palette"></i></button>
+                <button id="profileBtn" title="Profile"><i class="fas fa-user-circle"></i></button>
+            </div>
+        </div>
+        
+        <div class="chat-container" id="chatContainer"></div>
+        
+        <div class="input-area">
+            <input type="text" id="messageInput" placeholder="Type a message...">
+            <button id="sendBtn"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+    
+    <div id="themeModal" class="modal">
+        <div class="modal-content">
+            <h3>Choose Theme</h3>
+            <div class="theme-options">
+                <div class="theme-option" data-theme="light-blue">Light Blue</div>
+                <div class="theme-option" data-theme="pink">Pink</div>
+                <div class="theme-option" data-theme="purple">Purple</div>
+                <div class="theme-option" data-theme="green">Green</div>
+                <div class="theme-option" data-theme="dark">Dark</div>
+            </div>
+            <button class="close-modal">Close</button>
+        </div>
+    </div>
+    
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <h3>Profile</h3>
+            <div class="profile-upload">
+                <img id="profilePreview" src="" alt="Profile">
+                <input type="file" id="profileInput" accept="image/*">
+                <label for="profileInput"><i class="fas fa-camera"></i> Upload Photo</label>            </div>
+            <p><strong>Name:</strong> <span id="displayName"></span></p>
+            <button class="close-modal">Close</button>
+        </div>
+    </div>
+    
+    <nav class="bottom-nav">
+        <a href="chat.html" class="nav-item active"><i class="fas fa-comments"></i><span>Chat</span></a>
+        <a href="music.html" class="nav-item"><i class="fas fa-music"></i><span>Music</span></a>
+        <a href="memories.html" class="nav-item"><i class="fas fa-images"></i><span>Memories</span></a>
+        <a href="othersites.html" class="nav-item"><i class="fas fa-globe"></i><span>Sites</span></a>
+        <a href="countdown.html" class="nav-item"><i class="fas fa-clock"></i><span>Countdown</span></a>
+    </nav>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDKKUQUAcRyMeugjQRJ06TfdN2qfLgpRMA",
+            authDomain: "chatweb-3ecb0.firebaseapp.com",
+            projectId: "chatweb-3ecb0",
+            storageBucket: "chatweb-3ecb0.firebasestorage.app",
+            messagingSenderId: "348010514098",
+            appId: "1:348010514098:web:93023cd4faf9d443232bab",
+            measurementId: "G-ZQY3V6PR2K"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+
+        const userName = localStorage.getItem('userName');
+        if (!userName) {
+            window.location.href = 'index.html';
+        }
+
+        document.getElementById('displayName').textContent = userName;
+        
+        const profileImg = localStorage.getItem('profileImg');
+        if (profileImg) {
+            document.getElementById('profilePreview').src = profileImg;
+        }
+
+        const chatContainer = document.getElementById('chatContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const themeBtn = document.getElementById('themeBtn');
+        const profileBtn = document.getElementById('profileBtn');        const themeModal = document.getElementById('themeModal');
+        const profileModal = document.getElementById('profileModal');
+        const profileInput = document.getElementById('profileInput');
+        const profilePreview = document.getElementById('profilePreview');
+
+        const messagesRef = collection(db, 'messages');
+        const q = query(messagesRef, orderBy('timestamp'));
+
+        onSnapshot(q, (snapshot) => {
+            chatContainer.innerHTML = '';
+            snapshot.forEach((doc) => {
+                const msg = doc.data();
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `message ${msg.sender === userName ? 'sent' : 'received'}`;
+                
+                const reactions = msg.reactions || {};
+                const reactionCount = Object.keys(reactions).length;
+                
+                msgDiv.innerHTML = `
+                    <div class="message-content">
+                        <div class="message-sender">${msg.sender}</div>
+                        <div class="message-text">${msg.text}</div>
+                        <div class="message-time">${new Date(msg.timestamp?.seconds * 1000).toLocaleTimeString()}</div>
+                        <div class="reactions">
+                            ${reactionCount > 0 ? `<span class="reaction-count"><i class="fas fa-heart"></i> ${reactionCount}</span>` : ''}
+                            <button class="react-btn" data-msgid="${doc.id}"><i class="far fa-heart"></i></button>
+                        </div>
+                    </div>
+                `;
+                chatContainer.appendChild(msgDiv);
+            });
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        });
+
+        sendBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+            
+            await addDoc(messagesRef, {
+                sender: userName,
+                text: text,
+                timestamp: serverTimestamp(),
+                reactions: {}
+            });
+                        messageInput.value = '';
+            
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('Message Sent', {
+                    body: text,
+                    icon: '/icon-192.png'
+                });
+            }
+        }
+
+        chatContainer.addEventListener('click', async (e) => {
+            if (e.target.closest('.react-btn')) {
+                const btn = e.target.closest('.react-btn');
+                const msgId = btn.dataset.msgid;
+                const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
+                const msgRef = doc(db, 'messages', msgId);
+                const msgDoc = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
+                
+                const snapshot = await msgDoc.getDoc(msgRef);
+                const reactions = snapshot.data().reactions || {};
+                
+                if (reactions[userName]) {
+                    delete reactions[userName];
+                } else {
+                    reactions[userName] = '❤️';
+                }
+                
+                await updateDoc(msgRef, { reactions });
+            }
+        });
+
+        themeBtn.addEventListener('click', () => themeModal.style.display = 'flex');
+        profileBtn.addEventListener('click', () => profileModal.style.display = 'flex');
+        
+        document.querySelectorAll('.close-modal').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.closest('.modal').style.display = 'none';
+            });
+        });
+
+        document.querySelectorAll('.theme-option').forEach(option => {
+            option.addEventListener('click', () => {
+                const theme = option.dataset.theme;
+                document.body.className = `theme-${theme}`;
+                localStorage.setItem('chatTheme', theme);
+                themeModal.style.display = 'none';
+            });
+        });
+
+        const savedTheme = localStorage.getItem('chatTheme');        if (savedTheme) {
+            document.body.className = `theme-${savedTheme}`;
+        }
+
+        profileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const imgData = e.target.result;
+                    profilePreview.src = imgData;
+                    localStorage.setItem('profileImg', imgData);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>
